@@ -1,6 +1,5 @@
 export type ProductListType = {
   products: ProductItem[];
-
   total: number;
   skip: number;
   limit: number;
