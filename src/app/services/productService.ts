@@ -14,12 +14,16 @@ type searchProductParams = {
 
 export const getProductList = async (params?: getProductListParams) => {
   const url = `${process.env.NEXT_PUBLIC_BE_URL}/products`;
-  const res = await axios.get<ProductListType>(url, { params: params });
+  const res = await axios.get<ProductListType>(url, {
+    params: { ...params, limit: 20 },
+  });
   return res.data;
 };
 
 export const searchProduct = async (params?: searchProductParams) => {
   const url = `${process.env.NEXT_PUBLIC_BE_URL}/products/search`;
-  const res = await axios.get<ProductListType>(url, { params });
+  const res = await axios.get<ProductListType>(url, {
+    params: { ...params, limit: 20 },
+  });
   return res.data;
 };

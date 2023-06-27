@@ -1,11 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import { getProductList, searchProduct } from "@/app/services/productService";
-import {
-  ProductItem,
-  ProductListType,
-} from "@/app/services/productService.types";
-import { useDebounce } from "@/app/utils/hooks";
+
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { getProductList, searchProduct } from "@/app/services/productService";
+import { ProductItem } from "@/app/services/productService.types";
+import { useDebounce } from "@/app/utils/hooks";
 
 const fetchProductList = async (skipItem: number) => {
   try {
@@ -20,11 +21,13 @@ const fetchProductList = async (skipItem: number) => {
 
 const ProductList = () => {
   const [productList, setProductList] = useState<ProductItem[]>([]);
-  const [isEnable, setIsEnable] = useState(true);
   const [keyword, setKeyword] = useState("");
+
   const debouncedKeyword = useDebounce(keyword, 300);
+
   const skipItemRef = useRef(0);
   const loadingRef = useRef(false);
+  const isEnableRef = useRef(true);
   const itemRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = async () => {
@@ -33,7 +36,7 @@ const ProductList = () => {
       window.innerHeight + document.documentElement.scrollTop >=
         document.documentElement.offsetHeight &&
       !loadingRef.current &&
-      isEnable
+      isEnableRef.current
     ) {
       loadingRef.current = true;
       let data;
@@ -48,10 +51,10 @@ const ProductList = () => {
       if (data) {
         const { products } = data;
         setProductList((prevProductList) => [...prevProductList, ...products]);
-        if (data.total >= data.skip + 20) {
+        if (data.total > data.skip + 20) {
           skipItemRef.current = data.skip + 20;
         } else {
-          setIsEnable(false);
+          isEnableRef.current = false;
         }
       }
 
@@ -64,7 +67,15 @@ const ProductList = () => {
       q: debouncedKeyword,
     });
     setProductList(res.products);
-    skipItemRef.current = res.limit + 20;
+    if (res.total < 20) {
+      isEnableRef.current = false;
+      return;
+    }
+    if (res.total > res.limit + 20) {
+      skipItemRef.current = res.skip + 20;
+    } else {
+      skipItemRef.current = res.limit;
+    }
   }, [debouncedKeyword]);
 
   useEffect(() => {
@@ -72,10 +83,10 @@ const ProductList = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [debouncedKeyword, isEnable]);
+  }, [debouncedKeyword]);
 
   useEffect(() => {
-    setIsEnable(true);
+    isEnableRef.current = true;
     handleSearch();
   }, [debouncedKeyword, handleSearch]);
 
@@ -88,27 +99,28 @@ const ProductList = () => {
         placeholder="Search"
         type="text"
       />
-      <div ref={itemRef} className="grid grid-cols-4 gap-3">
-        {!!productList &&
-          productList.map((prod) => {
-            return (
-              <div
-                className="border rounded-xl p-2 cursor-pointer"
-                key={prod.id}
-              >
-                <img
-                  className="w-full flex-1 aspect-[238/158]"
-                  src={prod.thumbnail}
-                  alt="Thumbnail Image"
-                />
-                <h3>{prod.title}</h3>
-                <p>{prod.description}</p>
-                <p>{`${prod.price}$`}</p>
-              </div>
-            );
-          })}
-      </div>
-      {loadingRef.current && (
+      {!!productList.length ? (
+        <div ref={itemRef} className="grid grid-cols-4 gap-3">
+          {!!productList &&
+            productList.map((prod) => {
+              return (
+                <div
+                  className="border rounded-xl p-2 cursor-pointer flex flex-col"
+                  key={prod.id}
+                >
+                  <img
+                    className="w-full  aspect-[238/158]"
+                    src={prod.thumbnail}
+                    alt="Thumbnail Image"
+                  />
+                  <h3 className="font-medium text-lg">{prod.title}</h3>
+                  <p className="text-sm mt-auto">{prod.description}</p>
+                  <p className="font-medium text-base">{`${prod.price}$`}</p>
+                </div>
+              );
+            })}
+        </div>
+      ) : (
         <div className=" text-center mt-3">...Loading</div>
       )}
     </div>
