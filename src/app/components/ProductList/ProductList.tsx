@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -30,7 +29,7 @@ const ProductList = () => {
   const isEnableRef = useRef(true);
   const itemRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = async () => {
+  const handleScroll = useCallback(async () => {
     if (
       itemRef?.current &&
       window.innerHeight + document.documentElement.scrollTop >=
@@ -39,6 +38,7 @@ const ProductList = () => {
       isEnableRef.current
     ) {
       loadingRef.current = true;
+
       let data;
       if (debouncedKeyword) {
         data = await searchProduct({
@@ -48,6 +48,7 @@ const ProductList = () => {
       } else {
         data = await fetchProductList(skipItemRef.current);
       }
+
       if (data) {
         const { products } = data;
         setProductList((prevProductList) => [...prevProductList, ...products]);
@@ -60,21 +61,27 @@ const ProductList = () => {
 
       loadingRef.current = false;
     }
-  };
+  }, [debouncedKeyword]);
 
   const handleSearch = useCallback(async () => {
-    const res = await searchProduct({
-      q: debouncedKeyword,
-    });
-    setProductList(res.products);
-    if (res.total < 20) {
-      isEnableRef.current = false;
-      return;
-    }
-    if (res.total > res.limit + 20) {
-      skipItemRef.current = res.skip + 20;
-    } else {
-      skipItemRef.current = res.limit;
+    try {
+      const res = await searchProduct({
+        q: debouncedKeyword,
+      });
+
+      setProductList(res.products);
+      if (res.total < 20) {
+        isEnableRef.current = false;
+        return;
+      }
+
+      if (res.total > res.limit + 20) {
+        skipItemRef.current = res.skip + 20;
+      } else {
+        skipItemRef.current = res.limit;
+      }
+    } catch (error) {
+      console.log(error);
     }
   }, [debouncedKeyword]);
 
@@ -83,7 +90,7 @@ const ProductList = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [debouncedKeyword]);
+  }, [handleScroll]);
 
   useEffect(() => {
     isEnableRef.current = true;
@@ -93,6 +100,7 @@ const ProductList = () => {
   return (
     <div className="max-w-[1440px] px-[100px] mx-auto py-[100px]">
       <input
+        className="border p-2 rounded-md mb-4"
         onChange={(e) => {
           setKeyword(e.target.value);
         }}
@@ -100,7 +108,7 @@ const ProductList = () => {
         type="text"
       />
       {!!productList.length ? (
-        <div ref={itemRef} className="grid grid-cols-4 gap-3">
+        <div ref={itemRef} className="grid grid-cols-4 gap-3 ">
           {!!productList &&
             productList.map((prod) => {
               return (
