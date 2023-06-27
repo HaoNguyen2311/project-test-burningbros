@@ -9,17 +9,6 @@ import { useDebounce } from "@/app/utils/hooks";
 
 export const MIN_NUMBER_ITEM = 20;
 
-const fetchProductList = async (skipItem: number) => {
-  try {
-    const res = await getProductList({
-      skip: skipItem,
-    });
-    return res;
-  } catch (error) {
-    console.log(error);
-  }
-};
-
 const ProductList = () => {
   const [productList, setProductList] = useState<ProductItem[]>([]);
   const [keyword, setKeyword] = useState("");
@@ -38,29 +27,35 @@ const ProductList = () => {
       !loadingRef.current &&
       isEnableRef.current
     ) {
-      loadingRef.current = true;
-
-      let data;
-      if (debouncedKeyword) {
-        data = await searchProduct({
-          q: debouncedKeyword,
-          skip: skipItemRef.current,
-        });
-      } else {
-        data = await fetchProductList(skipItemRef.current);
-      }
-
-      if (data) {
-        const { products } = data;
-        setProductList((prevProductList) => [...prevProductList, ...products]);
-        if (data.total > data.skip + MIN_NUMBER_ITEM) {
-          skipItemRef.current = data.skip + MIN_NUMBER_ITEM;
+      try {
+        loadingRef.current = true;
+        let data;
+        if (debouncedKeyword) {
+          data = await searchProduct({
+            q: debouncedKeyword,
+            skip: skipItemRef.current,
+          });
         } else {
-          isEnableRef.current = false;
+          data = await getProductList({ skip: skipItemRef.current });
         }
-      }
 
-      loadingRef.current = false;
+        if (data) {
+          const { products } = data;
+          setProductList((prevProductList) => [
+            ...prevProductList,
+            ...products,
+          ]);
+          if (data.total > data.skip + MIN_NUMBER_ITEM) {
+            skipItemRef.current = data.skip + MIN_NUMBER_ITEM;
+          } else {
+            isEnableRef.current = false;
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        loadingRef.current = false;
+      }
     }
   }, [debouncedKeyword]);
 
@@ -130,7 +125,7 @@ const ProductList = () => {
             })}
         </div>
       ) : (
-        <div className=" text-center mt-3">...Loading</div>
+        <div className=" text-center mt-3">Empty</div>
       )}
     </div>
   );
