@@ -33,8 +33,7 @@ const ProductList = () => {
   const handleScroll = async () => {
     if (
       itemRef?.current &&
-      window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight &&
+      itemRef.current?.getBoundingClientRect().bottom <= window.innerHeight &&
       !loadingRef.current &&
       isEnableRef.current
     ) {
