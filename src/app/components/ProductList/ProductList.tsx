@@ -7,6 +7,8 @@ import { getProductList, searchProduct } from "@/app/services/productService";
 import { ProductItem } from "@/app/services/productService.types";
 import { useDebounce } from "@/app/utils/hooks";
 
+export const MIN_NUMBER_ITEM = 20;
+
 const fetchProductList = async (skipItem: number) => {
   try {
     const res = await getProductList({
@@ -51,8 +53,8 @@ const ProductList = () => {
       if (data) {
         const { products } = data;
         setProductList((prevProductList) => [...prevProductList, ...products]);
-        if (data.total > data.skip + 20) {
-          skipItemRef.current = data.skip + 20;
+        if (data.total > data.skip + MIN_NUMBER_ITEM) {
+          skipItemRef.current = data.skip + MIN_NUMBER_ITEM;
         } else {
           isEnableRef.current = false;
         }
@@ -69,13 +71,13 @@ const ProductList = () => {
       });
 
       setProductList(res.products);
-      if (res.total < 20) {
+      if (res.total < MIN_NUMBER_ITEM) {
         isEnableRef.current = false;
         return;
       }
 
-      if (res.total > res.limit + 20) {
-        skipItemRef.current = res.skip + 20;
+      if (res.total > res.limit + MIN_NUMBER_ITEM) {
+        skipItemRef.current = res.skip + MIN_NUMBER_ITEM;
       } else {
         skipItemRef.current = res.limit;
       }
