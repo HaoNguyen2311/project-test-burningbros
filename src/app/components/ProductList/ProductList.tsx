@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getProductList, searchProduct } from "@/app/services/productService";
 import { ProductItem } from "@/app/services/productService.types";
 import { useDebounce } from "@/app/utils/hooks";
+import { checkout } from "@/app/utils/checkout";
 
 export const MIN_NUMBER_ITEM = 20;
 
@@ -103,6 +104,17 @@ const ProductList = () => {
         placeholder="Search"
         type="text"
       />
+      <button
+        onClick={() => {
+          checkout({
+            lineItems: [
+              { price: "price_1NryJjD5gJn0Tg7Wkt5o9LhL", quantity: 1 },
+            ],
+          });
+        }}
+      >
+        1231321
+      </button>
       {!!productList.length ? (
         <div ref={itemRef} className="grid grid-cols-4 gap-3 ">
           {!!productList &&
